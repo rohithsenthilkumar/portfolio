@@ -75,8 +75,6 @@ export const portfolioData = {
       { name: "GitHub Actions", category: "DevOps", icon: "github-actions" },
       { name: "Cloud Computing", category: "Cloud", icon: "cloud" },
       { name: "Azure VMs", category: "Cloud", icon: "azure" },
-      { name: "Networking", category: "Infrastructure", icon: "network" },
-      { name: "KVM / Virtualization", category: "Infrastructure", icon: "linux" },
       { name: "Kali Linux", category: "Security", icon: "linux" },
       { name: "Burp Suite", category: "Security", icon: "burp" },
       { name: "k6 Load Testing", category: "Testing", icon: "k6" }
