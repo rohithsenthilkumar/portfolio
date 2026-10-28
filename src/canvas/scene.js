@@ -16,11 +16,11 @@ export class CanvasScene {
     this.time = 0;
     this.isDetailMode = false;
 
-    // Interactive parameters
+    // Interactive parameters (calibrated to smooth, elegant idle speeds)
     this.interactiveParams = {
       param1: 2.0, // Singularity Pull / Gravity Mass
       param2: 1.4, // Vortex Swirl Twist
-      param3: 1.1  // Orbit Speed
+      param3: 0.6  // Orbit Speed (reduced to 50-60% of previous 1.1 for calm idle rotation)
     };
 
     this.init();
@@ -31,8 +31,7 @@ export class CanvasScene {
 
   init() {
     this.scene = new THREE.Scene();
-    // Deep cosmic violet fog
-    this.scene.fog = new THREE.FogExp2(0x080312, 0.012);
+    // Removed fog to guarantee 100% crystal-clear, sharp, unblurred particles and contrast
 
     this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 0.1, 1000);
     this.camera.position.set(0, -6, 42);
@@ -51,7 +50,7 @@ export class CanvasScene {
     this.container.appendChild(this.renderer.domElement);
 
     // Ambient light
-    this.ambientLight = new THREE.AmbientLight(0xc084fc, 0.6);
+    this.ambientLight = new THREE.AmbientLight(0xc084fc, 0.8);
     this.scene.add(this.ambientLight);
 
     // Center Singularity Point Light
@@ -63,27 +62,28 @@ export class CanvasScene {
   createZeroVortex() {
     this.vortexGroup = new THREE.Group();
 
-    // 1. Accretion Particle Streams (4,500 orbital stars)
+    // 1. Accretion Particle Streams (4,500 crystal-clear orbital stars)
     const count = 4500;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const particles = [];
 
-    // Color gradient palette: deep violet, vibrant purple, electric lilac, white core
+    // Vivid high-contrast palette: crisp starlight violet, lilac, lavender, and diamond white
     const palette = [
-      new THREE.Color(0x3b0764), // deep purple
-      new THREE.Color(0x7c3aed), // electric violet
+      new THREE.Color(0x8b5cf6), // electric violet
       new THREE.Color(0xa855f7), // luminous magenta-purple
       new THREE.Color(0xc084fc), // bright lilac
-      new THREE.Color(0xf5f3ff)  // core starlight
+      new THREE.Color(0xe9d5ff), // crisp bright lavender
+      new THREE.Color(0xffffff)  // pure brilliant diamond starlight
     ];
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       // Exponential distribution: higher density near event horizon
       const radius = Math.pow(Math.random(), 1.8) * 36 + 3.2;
-      const speed = (0.25 + (1 / (radius + 0.5)) * 3.8) * 0.016;
+      // Base particle speed (calibrated to 50-60% of original)
+      const speed = (0.25 + (1 / (radius + 0.5)) * 3.8) * 0.009;
       const verticalSpread = (Math.random() - 0.5) * (radius * 0.18 + 0.4);
 
       particles.push({
@@ -112,45 +112,54 @@ export class CanvasScene {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Custom glowing circle particle texture
+    // Razor-sharp, solid starlight dot texture with subpixel anti-aliased edge
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
-    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    grad.addColorStop(0.2, 'rgba(192, 132, 252, 0.9)');
-    grad.addColorStop(0.5, 'rgba(124, 58, 237, 0.4)');
-    grad.addColorStop(1, 'rgba(8, 3, 18, 0)');
+    ctx.clearRect(0, 0, 64, 64);
+
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 30);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.78, '#ffffff');
+    grad.addColorStop(0.92, 'rgba(255, 255, 255, 0.9)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(32, 32, 32, 0, Math.PI * 2);
+    ctx.arc(32, 32, 30, 0, Math.PI * 2);
     ctx.fill();
-    const particleTexture = new THREE.CanvasTexture(canvas);
 
+    const particleTexture = new THREE.CanvasTexture(canvas);
+    particleTexture.generateMipmaps = true;
+    particleTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    particleTexture.magFilter = THREE.LinearFilter;
+
+    // Pinpoint particle size (0.55) + alphaTest for razor-sharp clarity without fuzzy blur
     const material = new THREE.PointsMaterial({
-      size: 2.2,
+      size: 0.55,
+      sizeAttenuation: true,
       map: particleTexture,
       transparent: true,
       blending: THREE.AdditiveBlending,
       vertexColors: true,
-      depthWrite: false
+      depthWrite: false,
+      alphaTest: 0.05
     });
 
     const pointsMesh = new THREE.Points(geometry, material);
     this.vortexGroup.add(pointsMesh);
 
-    // 2. Glowing Event Horizon Accretion Rings
+    // 2. Glowing Event Horizon Accretion Rings (high segment count for crisp circular geometry)
     this.rings = [];
     const ringRadii = [
-      { inner: 3.1, outer: 3.4, opacity: 0.75, color: 0xc084fc },
-      { inner: 4.8, outer: 5.1, opacity: 0.45, color: 0xa855f7 },
-      { inner: 8.5, outer: 8.7, opacity: 0.25, color: 0x7c3aed },
-      { inner: 13.5, outer: 13.7, opacity: 0.15, color: 0x6d28d9 }
+      { inner: 3.1, outer: 3.3, opacity: 0.85, color: 0xc084fc },
+      { inner: 4.8, outer: 4.95, opacity: 0.6, color: 0xa855f7 },
+      { inner: 8.5, outer: 8.62, opacity: 0.35, color: 0x7c3aed },
+      { inner: 13.5, outer: 13.6, opacity: 0.2, color: 0x6d28d9 }
     ];
 
     ringRadii.forEach((r) => {
-      const ringGeo = new THREE.RingGeometry(r.inner, r.outer, 80);
+      const ringGeo = new THREE.RingGeometry(r.inner, r.outer, 180);
       const ringMat = new THREE.MeshBasicMaterial({
         color: r.color,
         side: THREE.DoubleSide,
@@ -165,7 +174,7 @@ export class CanvasScene {
     });
 
     // 3. Central Singularity Sphere (Void Core)
-    const coreGeo = new THREE.SphereGeometry(2.9, 32, 32);
+    const coreGeo = new THREE.SphereGeometry(2.9, 48, 48);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0x05010a
     });
@@ -205,6 +214,7 @@ export class CanvasScene {
       this.camera.aspect = this.width / this.height;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(this.width, this.height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -240,10 +250,10 @@ export class CanvasScene {
       this.camera.position.x += (this.targetCameraX - this.camera.position.x) * 0.06;
     }
 
-    // Interactive parameters
+    // Interactive parameters (calibrated to ~50-60% of original speed)
     const gravityMass = this.interactiveParams.param1 || 2.0;
     const swirlTwist = this.interactiveParams.param2 || 1.4;
-    const orbitSpeed = this.interactiveParams.param3 || 1.1;
+    const orbitSpeed = this.interactiveParams.param3 !== undefined ? this.interactiveParams.param3 : 0.6;
 
     // Update Zero Vortex particles
     if (this.particlesData) {
@@ -255,11 +265,11 @@ export class CanvasScene {
         const p = particles[i];
         p.angle += p.speed * orbitSpeed * gravityMass;
 
-        // Swirling spiral radial harmonics
-        const r = p.radius + Math.sin(this.time * 1.5 + p.pulseOffset) * 0.4 * swirlTwist;
+        // Swirling spiral radial harmonics (calm, elegant breathing)
+        const r = p.radius + Math.sin(this.time * 0.9 + p.pulseOffset) * 0.4 * swirlTwist;
 
         positions[i * 3] = Math.cos(p.angle) * r;
-        positions[i * 3 + 1] = p.baseY + Math.sin(this.time * 2.2 + p.angle * 2) * 0.6;
+        positions[i * 3 + 1] = p.baseY + Math.sin(this.time * 1.2 + p.angle * 2) * 0.5;
         positions[i * 3 + 2] = Math.sin(p.angle) * r;
       }
       geometry.attributes.position.needsUpdate = true;
@@ -267,14 +277,15 @@ export class CanvasScene {
       // Group subtle mouse reaction & tilt
       const targetTilt = this.targetGroupTilt !== undefined ? this.targetGroupTilt : 0.95;
       this.vortexGroup.rotation.x = targetTilt + mouseInfluenceY * 0.2;
-      this.vortexGroup.rotation.y = this.time * 0.04 * orbitSpeed + mouseInfluenceX * 0.2;
-      this.vortexGroup.rotation.z = Math.sin(this.time * 0.4) * 0.05;
+      // Idle group rotation reduced to 50% (0.02 vs 0.04)
+      this.vortexGroup.rotation.y = this.time * 0.02 * orbitSpeed + mouseInfluenceX * 0.2;
+      this.vortexGroup.rotation.z = Math.sin(this.time * 0.2) * 0.035;
     }
 
-    // Rings slow counter-oscillation
+    // Rings slow counter-oscillation reduced to 50% (0.001 vs 0.002)
     if (this.rings) {
       this.rings.forEach((ring, idx) => {
-        ring.rotation.z += (idx % 2 === 0 ? 0.002 : -0.002) * orbitSpeed;
+        ring.rotation.z += (idx % 2 === 0 ? 0.001 : -0.001) * orbitSpeed;
       });
     }
 
